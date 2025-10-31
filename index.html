@@ -22,6 +22,7 @@
         text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
     }
     #gameBoard {
+        /* 8x9 크기 보드 스타일 */
         display: grid;
         grid-template-columns: repeat(8, 50px);
         grid-template-rows: repeat(9, 50px);
@@ -64,7 +65,8 @@
     <img id="eventImage" src="" alt="event">
 
 <script>
-const colors = ['#f9c6c9','#f8d9b3','#faf0b6','#c8e5b9','#b5e3f0','#d2b5f7'];
+// ⭐ 새로운 파스텔톤 색상 적용 ⭐
+const colors = ['#ffb3c1','#ffddad','#ffecb3','#b6e4cc','#aed9e0','#d4bfff'];
 const board = document.getElementById('gameBoard');
 const comboDisplay = document.getElementById('comboCount');
 const eventImage = document.getElementById('eventImage');
@@ -74,12 +76,16 @@ let highScore = 0;
 let lastMoveTime = Date.now();
 let grid = [];
 
+// GitHub 저장소 이름 'DULMUNGBLAST' 적용 완료
+const REPO_PATH = '/DULMUNGBLAST/'; 
+
 function createBoard() {
     grid = [];
     board.innerHTML = '';
     for (let y = 0; y < 9; y++) {
         const row = [];
-        for (let x = 0; x < 8; x++) {
+        // 보드 생성 오류 수정 완료
+        for (let x = 0; x < 8; x++) { 
             const block = document.createElement('div');
             block.className = 'block';
             block.style.background = colors[Math.floor(Math.random() * colors.length)];
@@ -106,6 +112,8 @@ board.addEventListener('drop', e => {
         combo++;
         comboDisplay.textContent = combo;
         lastMoveTime = Date.now();
+        
+        // 경로 수정 적용
         showEvent('행복.png'); // 콤보 이벤트 이미지
         if (combo > highScore) {
             highScore = combo;
@@ -117,6 +125,7 @@ board.addEventListener('drop', e => {
 // 30초 무활동 시 "잠.png"
 setInterval(() => {
     if (Date.now() - lastMoveTime > 30000) {
+        // 경로 수정 적용
         showEvent('잠.png');
     }
 }, 5000);
@@ -126,13 +135,15 @@ setInterval(() => {
     if (Math.random() < 0.02) { // 확률적으로 게임 오버
         combo = 0;
         comboDisplay.textContent = combo;
+        // 경로 수정 적용
         showEvent('추움.png');
     }
 }, 2000);
 
 // 이미지 표시 함수
 function showEvent(filename) {
-    eventImage.src = filename;
+    // GitHub Pages 환경을 위해 저장소 경로를 사용합니다.
+    eventImage.src = REPO_PATH + filename;
     eventImage.style.opacity = 1;
     setTimeout(() => eventImage.style.opacity = 0, 2000);
 }

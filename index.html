@@ -1,141 +1,267 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DULMUNG BLAST</title>
-<style>
-    body {
-        background: #fdf6f0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        overflow: hidden;
-        font-family: 'Comic Sans MS', sans-serif;
-    }
-    h1 {
-        color: #a28ccf;
-        font-size: 2.4em;
-        margin-bottom: 10px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    }
-    #gameBoard {
-        display: grid;
-        grid-template-columns: repeat(8, 50px);
-        grid-template-rows: repeat(9, 50px);
-        gap: 4px;
-        background: #fff5fa;
-        padding: 10px;
-        border-radius: 15px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.15);
-    }
-    .block {
-        width: 50px;
-        height: 50px;
-        border-radius: 8px;
-        cursor: grab;
-        transition: transform 0.1s;
-    }
-    .block:active {
-        transform: scale(1.1);
-        cursor: grabbing;
-    }
-    #status {
-        margin-top: 15px;
-        font-size: 1.2em;
-        color: #7a5fa4;
-    }
-    #eventImage {
-        position: absolute;
-        bottom: 10%;
-        width: 180px;
-        opacity: 0;
-        transition: opacity 0.5s;
-        pointer-events: none;
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DULMUNG BLAST Game</title>
+    <style>
+        :root {
+            /* 8 Rows x 9 Columns Grid Settings */
+            --grid-rows: 8;
+            --grid-cols: 9;
+            --cell-size: 40px; /* Cell size */
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: sans-serif;
+            color: #333;
+        }
+
+        h1 {
+            color: #4a4a4a;
+        }
+
+        #game-container {
+            position: relative;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-rows: repeat(var(--grid-rows), var(--cell-size));
+            grid-template-columns: repeat(var(--grid-cols), var(--cell-size));
+            border: 3px solid #333;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            background-color: #ccc; /* Board background gray */
+        }
+
+        .cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            box-sizing: border-box;
+            border: 1px solid #999;
+            transition: background-color 0.1s;
+        }
+
+        /* Block colors: White, Black, Gray */
+        .block-white {
+            background-color: white;
+        }
+        
+        .block-black {
+            background-color: black;
+        }
+        
+        .block-gray {
+            background-color: gray;
+        }
+
+        #status-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 150px;
+            max-height: 150px;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none; /* Make image unclickable */
+        }
+
+        #status-image.visible {
+            opacity: 1;
+        }
+
+        #score-board {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
+
     <h1>DULMUNG BLAST</h1>
-    <div id="gameBoard"></div>
-    <div id="status">콤보: <span id="comboCount">0</span></div>
-    <img id="eventImage" src="" alt="event">
+    <div id="score-board">Score: <span id="current-score">0</span> | High Score: <span id="high-score">0</span></div>
+    
+    <div id="game-container">
+        <div id="game-board">
+            </div>
+        <img id="status-image" src="" alt="Game Status Image">
+    </div>
 
-<script>
-const colors = ['#f9c6c9','#f8d9b3','#faf0b6','#c8e5b9','#b5e3f0','#d2b5f7'];
-const board = document.getElementById('gameBoard');
-const comboDisplay = document.getElementById('comboCount');
-const eventImage = document.getElementById('eventImage');
+    <button onclick="startGame()">Start / Restart Game</button>
 
-let combo = 0;
-let highScore = 0;
-let lastMoveTime = Date.now();
-let grid = [];
+    <script>
+        // --- Game Configuration ---
+        const ROWS = 8;
+        const COLS = 9;
+        const CELL_COLORS = ['block-white', 'block-black', 'block-gray'];
+        const SLEEP_TIMEOUT = 30000; // 30 seconds for '잠.png'
 
-function createBoard() {
-    grid = [];
-    board.innerHTML = '';
-    for (let y = 0; y < 9; y++) {
-        const row = [];
-        for (let x = 0; x < 8; x++) {
-            const block = document.createElement('div');
-            block.className = 'block';
-            block.style.background = colors[Math.floor(Math.random() * colors.length)];
-            block.draggable = true;
-            block.dataset.x = x;
-            block.dataset.y = y;
-            board.appendChild(block);
-            row.push(block);
+        // --- DOM Elements ---
+        const gameBoard = document.getElementById('game-board');
+        const statusImage = document.getElementById('status-image');
+        const currentScoreElement = document.getElementById('current-score');
+        const highScoreElement = document.getElementById('high-score');
+
+        // --- Game State Variables ---
+        let board = [];
+        let score = 0;
+        let highScore = localStorage.getItem('dulmungBlastHighScore') || 0;
+        let lastMoveTime = Date.now();
+        let sleepTimer = null;
+        let comboCount = 0;
+
+        highScoreElement.textContent = highScore;
+
+        // --- Function: Initialize and Draw Board ---
+        function createBoard() {
+            gameBoard.innerHTML = '';
+            board = Array(ROWS).fill(0).map(() => Array(COLS).fill(0)); // 0: empty
+            
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.addEventListener('click', handleCellClick); // Temporary click event for testing
+                    gameBoard.appendChild(cell);
+                }
+            }
         }
-        grid.push(row);
-    }
-}
-createBoard();
-
-// 드래그 앤 드롭
-let selected = null;
-board.addEventListener('dragstart', e => selected = e.target);
-board.addEventListener('dragover', e => e.preventDefault());
-board.addEventListener('drop', e => {
-    if (selected && e.target.classList.contains('block') && selected !== e.target) {
-        const temp = selected.style.background;
-        selected.style.background = e.target.style.background;
-        e.target.style.background = temp;
-        combo++;
-        comboDisplay.textContent = combo;
-        lastMoveTime = Date.now();
-        showEvent('행복.png'); // 콤보 이벤트 이미지
-        if (combo > highScore) {
-            highScore = combo;
-            showEvent('신남.png'); // 신기록 이미지
+        
+        function updateBoardDisplay() {
+            // Update the display of cells based on the 'board' array's state.
+            const cells = gameBoard.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                // Remove existing color classes
+                CELL_COLORS.forEach(color => cell.classList.remove(color));
+                
+                // (Temporary) Assign a random color
+                const randomColor = CELL_COLORS[Math.floor(Math.random() * CELL_COLORS.length)];
+                cell.classList.add(randomColor);
+            });
         }
-    }
-});
 
-// 30초 무활동 시 "잠.png"
-setInterval(() => {
-    if (Date.now() - lastMoveTime > 30000) {
-        showEvent('잠.png');
-    }
-}, 5000);
+        // --- Function: Show and Hide Game Images (Using Korean Filenames) ---
+        function showImage(fileName, duration = 1500) {
+            statusImage.src = fileName; // e.g., "잠.png"
+            statusImage.classList.add('visible');
 
-// 게임 오버 테스트용 (랜덤 확률로 발생)
-setInterval(() => {
-    if (Math.random() < 0.02) { // 확률적으로 게임 오버
-        combo = 0;
-        comboDisplay.textContent = combo;
-        showEvent('추움.png');
-    }
-}, 2000);
+            setTimeout(() => {
+                statusImage.classList.remove('visible');
+            }, duration);
+        }
 
-// 이미지 표시 함수
-function showEvent(filename) {
-    eventImage.src = filename;
-    eventImage.style.opacity = 1;
-    setTimeout(() => eventImage.style.opacity = 0, 2000);
-}
-</script>
+        // --- Function: State Check and Timer Management ---
+        function checkInactivity() {
+            // Display '잠.png' if no block movement for 30+ seconds
+            if (Date.now() - lastMoveTime > SLEEP_TIMEOUT) {
+                showImage('잠.png', 5000); 
+            }
+        }
+
+        function resetInactivityTimer() {
+            lastMoveTime = Date.now();
+            clearTimeout(sleepTimer);
+            sleepTimer = setTimeout(checkInactivity, SLEEP_TIMEOUT);
+        }
+
+        // --- Function: Main Game Event Triggers ---
+        
+        // 1. Called upon successful block movement/placement
+        function handleMove(isSuccessfulMove = true) {
+            if (isSuccessfulMove) {
+                resetInactivityTimer();
+                // Add block placement and row/column clearing logic here.
+                updateBoardDisplay(); 
+            }
+        }
+
+        // 2. Called upon successful row/column clear (combo)
+        function handleCombo(isCombo = true, newScore) {
+            if (isCombo) {
+                comboCount++;
+                // Display '행복.png' on combo
+                showImage('행복.png', 1000); 
+            } else {
+                comboCount = 0;
+            }
+            
+            // Update score
+            score = newScore; 
+            currentScoreElement.textContent = score;
+
+            // Check for new high score
+            if (score > highScore) {
+                handleNewRecord();
+            }
+        }
+
+        // 3. Called when a new high score is achieved
+        function handleNewRecord() {
+            highScore = score;
+            localStorage.setItem('dulmungBlastHighScore', highScore);
+            highScoreElement.textContent = highScore;
+            // Display '신남.png' on new high score
+            showImage('신남.png', 2000); 
+        }
+
+        // 4. Called when the game is over (no more valid moves)
+        function handleGameOver() {
+            clearTimeout(sleepTimer);
+            
+            // Display '추움.png' on game over
+            showImage('추움.png', 3000); 
+            
+            // Additional game over logic...
+        }
+        
+        // --- Function: Cell Click (Temporary for testing) ---
+        function handleCellClick(event) {
+            // This is a placeholder for actual drag-and-drop logic.
+            handleMove(true); 
+
+            // (Temporary Test) Increase score and check combo/new record
+            const newScore = score + 10; 
+            handleCombo(true, newScore); 
+
+            // (Temporary Test) Trigger Game Over when score exceeds 100
+            if (newScore > 100 && newScore < 111) {
+                handleGameOver();
+            }
+        }
+
+        // --- Game Start Function ---
+        function startGame() {
+            score = 0;
+            currentScoreElement.textContent = score;
+            comboCount = 0;
+            createBoard();
+            // updateBoardDisplay(); // Initial board state setup (shows random colors for test)
+            resetInactivityTimer(); // Start inactivity timer
+            // Add initial block generation logic here
+        }
+        
+        // Initialize game on page load
+        document.addEventListener('DOMContentLoaded', startGame);
+        
+    </script>
 </body>
 </html>

@@ -3,329 +3,150 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DULMUNG BLAST 💠</title>
+<title>DULMUNG BLAST</title>
 <style>
-  body {
-    margin: 0;
-    background: linear-gradient(135deg, #fefefe, #e6f4f1);
-    font-family: "Noto Sans KR", sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden;
-    user-select: none;
-  }
-
-  h1 {
-    color: #81c784;
-    margin: 10px 0;
-    font-weight: 800;
-    text-shadow: 1px 1px 2px #ffffff;
-  }
-
-  #scoreboard {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    font-size: 1.1em;
-    color: #4b5563;
-  }
-
-  #game {
-    display: grid;
-    grid-template-columns: repeat(9, 40px);
-    grid-template-rows: repeat(8, 40px);
-    gap: 4px;
-    background: #dceefb;
-    border-radius: 10px;
-    padding: 8px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.1);
-    margin-top: 10px;
-  }
-
-  .cell {
-    width: 40px;
-    height: 40px;
-    background: #f1faff;
-    border-radius: 6px;
-    transition: background 0.2s;
-  }
-
-  .filled {
-    background: var(--color);
-    box-shadow: inset 0 0 6px rgba(0,0,0,0.15);
-  }
-
-  #bottom {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 25px;
-    margin-top: auto;
-    margin-bottom: 25px;
-  }
-
-  .piece {
-    display: inline-grid;
-    gap: 4px;
-    cursor: grab;
-  }
-
-  .block {
-    width: 28px;
-    height: 28px;
-    border-radius: 5px;
-    background: var(--color);
-    transition: transform 0.15s;
-  }
-
-  .block:active {
-    transform: scale(0.95);
-  }
-
-  /* 반짝이는 애니메이션 */
-  @keyframes sparkle {
-    0% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.2); }
-    100% { opacity: 0; transform: scale(1.4); }
-  }
-
-  .sparkle {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: radial-gradient(circle, #fff, transparent);
-    border-radius: 50%;
-    pointer-events: none;
-    animation: sparkle 0.6s ease-out forwards;
-  }
-
-  #game-over {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(255,255,255,0.9);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    visibility: hidden;
-  }
-
-  #game-over h2 {
-    color: #81c784;
-    font-size: 2em;
-  }
-
-  button {
-    background: #aed581;
-    border: none;
-    border-radius: 8px;
-    color: #fff;
-    font-size: 1em;
-    padding: 10px 20px;
-    margin-top: 15px;
-    cursor: pointer;
-  }
-
-  button:hover {
-    background: #9ccc65;
-  }
+    body {
+        background: #fdf6f0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        overflow: hidden;
+        font-family: 'Comic Sans MS', sans-serif;
+    }
+    h1 {
+        color: #a28ccf;
+        font-size: 2.4em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    #gameBoard {
+        /* 8x9 크기 보드 스타일 */
+        display: grid;
+        grid-template-columns: repeat(8, 50px);
+        grid-template-rows: repeat(9, 50px);
+        gap: 4px;
+        background: #fff5fa;
+        padding: 10px;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.15);
+    }
+    .block {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        cursor: grab;
+        transition: transform 0.1s;
+    }
+    .block:active {
+        transform: scale(1.1);
+        cursor: grabbing;
+    }
+    #status {
+        margin-top: 15px;
+        font-size: 1.2em;
+        color: #7a5fa4;
+    }
+    #eventImage {
+        position: absolute;
+        bottom: 10%;
+        width: 180px;
+        opacity: 0;
+        transition: opacity 0.5s;
+        pointer-events: none;
+    }
 </style>
 </head>
 <body>
-  <h1>DULMUNG BLAST 💠</h1>
-  <div id="scoreboard">
-    <div id="score">점수: 0</div>
-    <div id="combo">콤보: 0</div>
-  </div>
-  <div id="game"></div>
-  <div id="bottom"></div>
-
-  <div id="game-over">
-    <h2>게임 오버 💀</h2>
-    <button onclick="restart()">다시 시작</button>
-  </div>
-
-  <!-- 효과음 -->
-  <audio id="place-sound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_3c0b0b64de.mp3"></audio>
-  <audio id="clear-sound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_38e292b3c9.mp3"></audio>
+    <h1>DULMUNG BLAST</h1>
+    <div id="gameBoard"></div>
+    <div id="status">콤보: <span id="comboCount">0</span></div>
+    <img id="eventImage" src="" alt="event">
 
 <script>
-const rows = 8, cols = 9;
-const board = Array(rows * cols).fill(0);
-const colors = ["#a8e6cf","#ffd3b6","#ffaaa5","#dcedc1","#b5ead7","#c7ceea"];
-const shapes = [
-  [[1,1,1]], [[1],[1],[1]], [[1,1],[1,0]], [[1,1],[0,1]],
-  [[1,1],[1,1]], [[1,1,1,1]], [[0,1,0],[1,1,1]], [[1,1,0],[0,1,1]], [[0,1,1],[1,1,0]],
-  [[1,1,1],[1,0,0]], [[1,1,1],[0,0,1]]
-];
-let score=0, combo=0;
+const colors = ['#f9c6c9','#f8d9b3','#faf0b6','#c8e5b9','#b5e3f0','#d2b5f7'];
+const board = document.getElementById('gameBoard');
+const comboDisplay = document.getElementById('comboCount');
+const eventImage = document.getElementById('eventImage');
 
-const game = document.getElementById("game");
-const scoreEl = document.getElementById("score");
-const comboEl = document.getElementById("combo");
-const bottom = document.getElementById("bottom");
-const over = document.getElementById("game-over");
-const placeSound = document.getElementById("place-sound");
-const clearSound = document.getElementById("clear-sound");
+let combo = 0;
+let highScore = 0;
+let lastMoveTime = Date.now();
+let grid = [];
 
-function createBoard(){
-  game.innerHTML="";
-  for(let i=0;i<rows*cols;i++){
-    const cell=document.createElement("div");
-    cell.className="cell";
-    game.appendChild(cell);
-  }
+// ⭐ GitHub 저장소 이름 'DULMUNGBLAST' 적용 완료! ⭐
+const REPO_PATH = '/DULMUNGBLAST/'; 
+
+function createBoard() {
+    grid = [];
+    board.innerHTML = '';
+    for (let y = 0; y < 9; y++) {
+        const row = [];
+        // 보드 생성 오류 수정: x=0부터 8 미만까지 반복 (8개)
+        for (let x = 0; x < 8; x++) { 
+            const block = document.createElement('div');
+            block.className = 'block';
+            block.style.background = colors[Math.floor(Math.random() * colors.length)];
+            block.draggable = true;
+            block.dataset.x = x;
+            block.dataset.y = y;
+            board.appendChild(block);
+            row.push(block);
+        }
+        grid.push(row);
+    }
 }
+createBoard();
 
-function drawPiece(shape){
-  const p=document.createElement("div");
-  p.className="piece";
-  p.shape=shape;
-  p.style.gridTemplateColumns=`repeat(${shape[0].length},28px)`;
-  const color=colors[Math.floor(Math.random()*colors.length)];
-  p.style.setProperty("--color",color);
-  shape.forEach(row=>row.forEach(v=>{
-    const b=document.createElement("div");
-    b.className="block";
-    b.style.background=color;
-    if(!v)b.style.visibility="hidden";
-    p.appendChild(b);
-  }));
-  p.draggable=true;
-  p.addEventListener("dragstart",e=>e.dataTransfer.setData("shape",JSON.stringify({shape,color})));
-  return p;
-}
-
-function spawnPieces(){
-  bottom.innerHTML="";
-  for(let i=0;i<3;i++){
-    bottom.appendChild(drawPiece(shapes[Math.floor(Math.random()*shapes.length)]));
-  }
-}
-
-game.addEventListener("dragover",e=>e.preventDefault());
-game.addEventListener("drop",e=>{
-  const rect=game.getBoundingClientRect();
-  const x=Math.floor((e.clientX-rect.left)/44);
-  const y=Math.floor((e.clientY-rect.top)/44);
-  const data=JSON.parse(e.dataTransfer.getData("shape"));
-  place(x,y,data.shape,data.color);
+// 드래그 앤 드롭
+let selected = null;
+board.addEventListener('dragstart', e => selected = e.target);
+board.addEventListener('dragover', e => e.preventDefault());
+board.addEventListener('drop', e => {
+    if (selected && e.target.classList.contains('block') && selected !== e.target) {
+        const temp = selected.style.background;
+        selected.style.background = e.target.style.background;
+        e.target.style.background = temp;
+        combo++;
+        comboDisplay.textContent = combo;
+        lastMoveTime = Date.now();
+        
+        // 경로 수정 적용
+        showEvent('행복.png'); // 콤보 이벤트 이미지
+        if (combo > highScore) {
+            highScore = combo;
+            showEvent('신남.png'); // 신기록 이미지
+        }
+    }
 });
 
-function canPlace(x,y,shape){
-  for(let i=0;i<shape.length;i++){
-    for(let j=0;j<shape[i].length;j++){
-      if(shape[i][j]){
-        const nx=x+j, ny=y+i;
-        if(nx<0||ny<0||nx>=cols||ny>=rows) return false;
-        if(board[ny*cols+nx]) return false;
-      }
+// 30초 무활동 시 "잠.png"
+setInterval(() => {
+    if (Date.now() - lastMoveTime > 30000) {
+        // 경로 수정 적용
+        showEvent('잠.png');
     }
-  }
-  return true;
-}
+}, 5000);
 
-function place(x,y,shape,color){
-  if(!canPlace(x,y,shape)) return;
-  shape.forEach((r,i)=>{
-    r.forEach((v,j)=>{
-      if(v){
-        const idx=(y+i)*cols+(x+j);
-        board[idx]=color;
-      }
-    });
-  });
-  update();
-  score+=shape.flat().filter(v=>v).length;
-  playSound(placeSound);
-  clearLines();
-  spawnPieces();
-  if(gameOverCheck()) over.style.visibility="visible";
-}
-
-function update(){
-  document.querySelectorAll(".cell").forEach((cell,i)=>{
-    if(board[i]){
-      cell.classList.add("filled");
-      cell.style.setProperty("--color",board[i]);
-    }else{
-      cell.classList.remove("filled");
+// 게임 오버 테스트용 (랜덤 확률로 발생)
+setInterval(() => {
+    if (Math.random() < 0.02) { // 확률적으로 게임 오버
+        combo = 0;
+        comboDisplay.textContent = combo;
+        // 경로 수정 적용
+        showEvent('추움.png');
     }
-  });
-}
+}, 2000);
 
-function sparkleEffect(x, y){
-  for(let i=0;i<10;i++){
-    const s=document.createElement("div");
-    s.className="sparkle";
-    s.style.left=`${x+Math.random()*40}px`;
-    s.style.top=`${y+Math.random()*40}px`;
-    s.style.background=`radial-gradient(circle, white, transparent)`;
-    document.body.appendChild(s);
-    setTimeout(()=>s.remove(),600);
-  }
+// 이미지 표시 함수
+function showEvent(filename) {
+    // GitHub Pages 환경을 위해 저장소 경로를 사용합니다.
+    eventImage.src = REPO_PATH + filename;
+    eventImage.style.opacity = 1;
+    setTimeout(() => eventImage.style.opacity = 0, 2000);
 }
-
-function clearLines(){
-  let cleared=0;
-  for(let r=0;r<rows;r++){
-    const start=r*cols;
-    if(board.slice(start,start+cols).every(v=>v)) {
-      for(let c=0;c<cols;c++) board[start+c]=0;
-      sparkleEffect(100,100);
-      cleared++;
-    }
-  }
-  for(let c=0;c<cols;c++){
-    let col=[];
-    for(let r=0;r<rows;r++) col.push(board[r*cols+c]);
-    if(col.every(v=>v)){
-      for(let r=0;r<rows;r++) board[r*cols+c]=0;
-      sparkleEffect(200,200);
-      cleared++;
-    }
-  }
-  if(cleared){
-    combo++;
-    score+=cleared*10*combo;
-    playSound(clearSound);
-  }else combo=0;
-  scoreEl.textContent="점수: "+score;
-  comboEl.textContent="콤보: "+combo;
-  update();
-}
-
-function playSound(sound){
-  sound.currentTime=0;
-  sound.play();
-}
-
-function gameOverCheck(){
-  return !shapes.some(s=>{
-    for(let y=0;y<rows;y++){
-      for(let x=0;x<cols;x++){
-        if(canPlace(x,y,s)) return true;
-      }
-    }
-    return false;
-  });
-}
-
-function restart(){
-  for(let i=0;i<board.length;i++) board[i]=0;
-  score=0; combo=0;
-  scoreEl.textContent="점수: 0";
-  comboEl.textContent="콤보: 0";
-  update();
-  spawnPieces();
-  over.style.visibility="hidden";
-}
-
-createBoard();
-spawnPieces();
 </script>
 </body>
 </html>
+

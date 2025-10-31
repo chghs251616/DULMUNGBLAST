@@ -1,72 +1,6 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DULMUNG BLAST</title>
-<style>
-    body {
-        background: #fdf6f0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        overflow: hidden;
-        font-family: 'Comic Sans MS', sans-serif;
-    }
-    h1 {
-        color: #a28ccf;
-        font-size: 2.4em;
-        margin-bottom: 10px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    }
-    #gameBoard {
-        /* 8x9 크기 보드 스타일 */
-        display: grid;
-        grid-template-columns: repeat(8, 50px);
-        grid-template-rows: repeat(9, 50px);
-        gap: 4px;
-        background: #fff5fa;
-        padding: 10px;
-        border-radius: 15px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.15);
-    }
-    .block {
-        width: 50px;
-        height: 50px;
-        border-radius: 8px;
-        cursor: grab;
-        transition: transform 0.1s;
-    }
-    .block:active {
-        transform: scale(1.1);
-        cursor: grabbing;
-    }
-    #status {
-        margin-top: 15px;
-        font-size: 1.2em;
-        color: #7a5fa4;
-    }
-    #eventImage {
-        position: absolute;
-        bottom: 10%;
-        width: 180px;
-        opacity: 0;
-        transition: opacity 0.5s;
-        pointer-events: none;
-    }
-</style>
-</head>
-<body>
-    <h1>DULMUNG BLAST</h1>
-    <div id="gameBoard"></div>
-    <div id="status">콤보: <span id="comboCount">0</span></div>
-    <img id="eventImage" src="" alt="event">
-
 <script>
-// ⭐ 새로운 파스텔톤 색상 적용 ⭐
-const colors = ['#ffb3c1','#ffddad','#ffecb3','#b6e4cc','#aed9e0','#d4bfff'];
+// ⭐ 무채색 (흰색, 검은색, 중간 회색) 적용 ⭐
+const colors = ['#FFFFFF', '#000000', '#808080']; // 흰색, 검은색, 회색
 const board = document.getElementById('gameBoard');
 const comboDisplay = document.getElementById('comboCount');
 const eventImage = document.getElementById('eventImage');
@@ -88,7 +22,10 @@ function createBoard() {
         for (let x = 0; x < 8; x++) { 
             const block = document.createElement('div');
             block.className = 'block';
-            block.style.background = colors[Math.floor(Math.random() * colors.length)];
+            
+            // ⭐ 문제 해결: 블록의 배경색이 무작위로 선택되도록 수정 ⭐
+            block.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]; 
+            
             block.draggable = true;
             block.dataset.x = x;
             block.dataset.y = y;
@@ -106,9 +43,12 @@ board.addEventListener('dragstart', e => selected = e.target);
 board.addEventListener('dragover', e => e.preventDefault());
 board.addEventListener('drop', e => {
     if (selected && e.target.classList.contains('block') && selected !== e.target) {
-        const temp = selected.style.background;
-        selected.style.background = e.target.style.background;
-        e.target.style.background = temp;
+        
+        // ⭐ 문제 해결: style.background 대신 style.backgroundColor 사용 ⭐
+        const temp = selected.style.backgroundColor; 
+        selected.style.backgroundColor = e.target.style.backgroundColor;
+        e.target.style.backgroundColor = temp;
+        
         combo++;
         comboDisplay.textContent = combo;
         lastMoveTime = Date.now();
@@ -148,5 +88,3 @@ function showEvent(filename) {
     setTimeout(() => eventImage.style.opacity = 0, 2000);
 }
 </script>
-</body>
-</html>
